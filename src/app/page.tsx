@@ -33,7 +33,7 @@ function App() {
 
   useEffect(() => {
     (async function () {
-      const res = await fetch("http://localhost:8000/data");
+      const res = await fetch("http://localhost:3000/api");
       const data = await res.json();
       setReqData(data);
     })();
@@ -60,7 +60,7 @@ function App() {
         })
       );
     }
-  }, [id, layers]);
+  }, [id, layers, reqData.features]);
 
   reqData.features?.map((feature: TFeature) => {
     properties.push(feature.properties);
