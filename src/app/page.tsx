@@ -33,7 +33,7 @@ function App() {
 
   useEffect(() => {
     (async function () {
-      const res = await fetch("http://localhost:3000/api");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_DOMAIN}/api`);
       const data = await res.json();
       setReqData(data);
     })();
