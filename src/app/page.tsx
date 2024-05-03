@@ -1,95 +1,126 @@
-import Image from "next/image";
+"use client";
+import { APIProvider, Map, limitTiltRange } from "@vis.gl/react-google-maps";
+import { GeoJsonLayer } from "@deck.gl/layers";
+import { DeckGL } from "deck.gl";
+import { useEffect, useState } from "react";
+
 import styles from "./page.module.css";
 
-export default function Home() {
+import { TFeature, TProperty, featureCollection } from "@/types/types";
+import Box from "@/components/box/box";
+import Button from "@/components/button/button";
+import Property from "@/components/property/property";
+
+const INITIAL_STATE = {
+  position: { lat: 28.457523, lng: 77.026344 },
+  zoom: 11,
+};
+
+function App() {
+  // Set toggle
+  const [toggle, setToggle] = useState(true);
+  // Set id
+  const [id, setId] = useState<number>(0);
+  // Set reqdata
+  const [reqData, setReqData] = useState<featureCollection>({
+    type: "FeatureCollection",
+    features: [],
+  });
+
+  const properties: TProperty[] = [];
+
+  let layers: any = [];
+
+  useEffect(() => {
+    (async function () {
+      const res = await fetch("http://localhost:8000/data");
+      const data = await res.json();
+      setReqData(data);
+    })();
+  }, []);
+
+  useEffect(() => {
+    function getIfIdIsPresent() {
+      return reqData.features.filter((feature) => {
+        return feature.properties.id === id;
+      });
+    }
+
+    let data = getIfIdIsPresent();
+
+    if (data[0]?.properties.id === id) {
+      layers.push(
+        new GeoJsonLayer({
+          id: `GeoJsonLayer_${id}`,
+          // @ts-ignore
+          data: data[0],
+          getFillColor: [0, 0, 0],
+          getLineColor: [255, 255, 255],
+          getLineWidth: 20,
+        })
+      );
+    }
+  }, [id, layers]);
+
+  reqData.features?.map((feature: TFeature) => {
+    properties.push(feature.properties);
+  });
+
+  const layer = new GeoJsonLayer({
+    id: "gurugram",
+    data: "http://localhost:3000/api",
+    fill: true,
+    stroked: true,
+    getFillColor: [169, 198, 181, 100],
+    getLineColor: [169, 198, 181],
+    // default is meters not pixels
+    getLineWidth: 20,
+
+    pickable: true,
+    visible: toggle,
+  });
+
+  layers.push(layer);
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <APIProvider apiKey={process.env.NEXT_PUBLIC_REACT_GOOGLE_MAP!}>
+      <DeckGL
+        initialViewState={{
+          longitude: INITIAL_STATE.position.lng,
+          latitude: INITIAL_STATE.position.lat,
+          zoom: INITIAL_STATE.zoom,
+        }}
+        onViewStateChange={limitTiltRange}
+        controller={true}
+        layers={[layers]}
+      >
+        <Map
+          defaultCenter={INITIAL_STATE.position}
+          defaultZoom={INITIAL_STATE.zoom}
+          mapId={process.env.NEXT_PUBLIC_GOOGLE_MAP_STYLE_ID}
+          style={{ height: "100%", width: "100%" }}
         />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      </DeckGL>
+      <Box boxHeading="Layers" className={styles.left_box}>
+        {/* @ts-ignore */}
+        {layers.map((_, index) => {
+          return (
+            <Button
+              key={index}
+              btntext="GeoJson Layer"
+              toggle={toggle}
+              onClick={() => setToggle(!toggle)}
+            />
+          );
+        })}
+      </Box>
+      {toggle && (
+        <Box boxHeading="Properties" className={styles.right_box}>
+          <Property setId={setId} property={properties} />
+        </Box>
+      )}
+    </APIProvider>
   );
 }
+
+export default App;

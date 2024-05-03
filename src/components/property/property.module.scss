@@ -1,0 +1,37 @@
+.property {
+  list-style: none;
+  font-size: 1.6rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4rem;
+
+    & > button {
+      border: none;
+      border-radius: 0.4rem;
+      background-color: transparent;
+      cursor: pointer;
+      transition: background-color 250ms;
+      color: #d3f8e2;
+
+      &:hover {
+        color: #cecece;
+      }
+    }
+  }
+
+  li:not(:last-child) {
+    margin-bottom: 0.6rem;
+  }
+}
+
+.input {
+  width: 100%;
+  margin-bottom: 1.2rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.4rem;
+  border: none;
+  background-color: #fefefe;
+}
