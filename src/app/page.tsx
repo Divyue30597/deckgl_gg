@@ -11,6 +11,8 @@ import Box from "@/components/box/box";
 import Button from "@/components/button/button";
 import Property from "@/components/property/property";
 
+const API_URL = `${process.env.NEXT_PUBLIC_DOMAIN}/api`;
+
 const INITIAL_STATE = {
   position: { lat: 28.457523, lng: 77.026344 },
   zoom: 11,
@@ -33,7 +35,7 @@ function App() {
 
   useEffect(() => {
     (async function () {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_DOMAIN}/api`);
+      const res = await fetch(API_URL);
       const data = await res.json();
       setReqData(data);
     })();
@@ -68,7 +70,7 @@ function App() {
 
   const layer = new GeoJsonLayer({
     id: "gurugram",
-    data: "http://localhost:3000/api",
+    data: API_URL,
     fill: true,
     stroked: true,
     getFillColor: [169, 198, 181, 100],
